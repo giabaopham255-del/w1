@@ -24,7 +24,7 @@
   allowfullscreen 
   webkitallowfullscreen 
   mozallowfullscreen 
-  allow="fullscreen *; autoplay *; camera *; microphone *; display-capture *; encrypted-media *; picture-in-picture *">
+  allow="fullscreen *; pointer-lock *; keyboard-map *; autoplay *; camera *; microphone *; display-capture *; encrypted-media *; picture-in-picture *; screen-wake-lock *">
 </iframe>
 
 </body>
