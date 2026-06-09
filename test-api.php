@@ -3,6 +3,13 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title></title>
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: black;
+  }
   iframe {
     position: fixed;
     width: 100%;
@@ -27,50 +34,37 @@
 </iframe>
 
 <script>
-  let pressTimer = null;
-  let longPress = false;
-  
-  function goFullscreen() {
-    const docEl = document.documentElement;
-    const reqFull = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
-    if (reqFull) reqFull.call(docEl).catch(() => {});
-  }
-  
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      pressTimer = setTimeout(function() {
-        longPress = true;
-        const exitFull = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-        if (exitFull) exitFull.call(document).catch(() => {});
-      }, 500);
+  (function() {
+    let fullscreenActive = false;
+    
+    function makeFullscreen() {
+      const el = document.documentElement;
+      const method = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if (method && !fullscreenActive) {
+        method.call(el).catch(() => {});
+      }
     }
-  });
-  
-  document.addEventListener('keyup', function(e) {
-    if (e.key === 'Escape') {
-      if (pressTimer) clearTimeout(pressTimer);
-      if (!longPress) goFullscreen();
-      longPress = false;
-      pressTimer = null;
+    
+    function onFullscreenChange() {
+      fullscreenActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!fullscreenActive) {
+        makeFullscreen();
+      }
     }
-  });
-  
-  document.addEventListener('fullscreenchange', function() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      setTimeout(goFullscreen, 50);
-    }
-  });
-  
-  document.addEventListener('webkitfullscreenchange', function() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      setTimeout(goFullscreen, 50);
-    }
-  });
-  
-  goFullscreen();
+    
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    
+    window.addEventListener('load', function() {
+      setTimeout(makeFullscreen, 500);
+    });
+    
+    setInterval(function() {
+      if (!fullscreenActive) {
+        makeFullscreen();
+      }
+    }, 500);
+  })();
 </script>
 
 </body>
