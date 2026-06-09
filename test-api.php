@@ -29,8 +29,8 @@
 </iframe>
 
 <script>
-  let fullscreenExitAttempts = 0;
-  let fullscreenActive = false;
+  let escapePressTimer = null;
+  let isLongPress = false;
   
   function enterFullscreen() {
     const docEl = document.documentElement;
@@ -39,89 +39,56 @@
                              docEl.msRequestFullscreen;
     
     if (requestFullscreen) {
-      requestFullscreen.call(docEl).then(function() {
-        fullscreenActive = true;
-      }).catch(function() {});
+      requestFullscreen.call(docEl).catch(function() {});
     }
   }
-  
-  function exitFullscreen() {
-    const exitFullscreen = document.exitFullscreen || 
-                          document.webkitExitFullscreen || 
-                          document.msExitFullscreen;
-    
-    if (exitFullscreen && fullscreenActive) {
-      exitFullscreen.call(document).catch(function() {});
-      fullscreenActive = false;
-    }
-  }
-  
-  function forceFullscreen() {
-    if (!fullscreenActive) {
-      enterFullscreen();
-    }
-  }
-  
-  document.addEventListener('fullscreenchange', function() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      fullscreenActive = false;
-      setTimeout(enterFullscreen, 100);
-    } else {
-      fullscreenActive = true;
-    }
-  });
-  
-  document.addEventListener('webkitfullscreenchange', function() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      fullscreenActive = false;
-      setTimeout(enterFullscreen, 100);
-    } else {
-      fullscreenActive = true;
-    }
-  });
   
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
       
-      fullscreenExitAttempts++;
-      
-      setTimeout(function() {
-        fullscreenExitAttempts = 0;
-      }, 300);
-      
-      if (fullscreenExitAttempts >= 2) {
-        exitFullscreen();
-      } else {
-        setTimeout(function() {
-          if (fullscreenActive) {
-            enterFullscreen();
-          }
-        }, 50);
-      }
+      escapePressTimer = setTimeout(function() {
+        isLongPress = true;
+        const exitFullscreen = document.exitFullscreen || 
+                              document.webkitExitFullscreen || 
+                              document.msExitFullscreen;
+        if (exitFullscreen) {
+          exitFullscreen.call(document).catch(function() {});
+        }
+      }, 500);
     }
   });
   
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
+  document.addEventListener('keyup', function(e) {
+    if (e.key === 'Escape') {
+      if (escapePressTimer) {
+        clearTimeout(escapePressTimer);
+        escapePressTimer = null;
+      }
+      
+      if (!isLongPress) {
+        setTimeout(enterFullscreen, 50);
+      }
+      isLongPress = false;
+    }
   });
   
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' || 
-        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-        (e.ctrlKey && e.key === 'U')) {
-      e.preventDefault();
-      return false;
+  document.addEventListener('fullscreenchange', function() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      setTimeout(enterFullscreen, 100);
+    }
+  });
+  
+  document.addEventListener('webkitfullscreenchange', function() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      setTimeout(enterFullscreen, 100);
     }
   });
   
   window.addEventListener('load', function() {
     setTimeout(enterFullscreen, 500);
   });
-  
-  setInterval(forceFullscreen, 500);
 </script>
 
 </body>
